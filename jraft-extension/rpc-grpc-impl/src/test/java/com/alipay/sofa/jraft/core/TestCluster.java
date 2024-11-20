@@ -22,7 +22,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -88,7 +87,7 @@ public class TestCluster {
     private final int                                     electionTimeoutMs;
     private final Lock                                    lock      = new ReentrantLock();
 
-    private Map<PeerId, PeerId> learners;
+    private Map<PeerId, PeerId>                           learners;
 
     public Map<PeerId, PeerId> getLearners() {
         return this.learners;

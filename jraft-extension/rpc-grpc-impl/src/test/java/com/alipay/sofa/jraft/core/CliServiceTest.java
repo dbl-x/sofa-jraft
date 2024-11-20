@@ -82,7 +82,8 @@ public class CliServiceTest {
         final Map<PeerId, PeerId> learners = new ConcurrentHashMap<>();
         //2 learners
         for (int i = 0; i < 2; i++) {
-            learners.put(new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + LEARNER_PORT_STEP + i), Configuration.NULL_PEERID);
+            learners.put(new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + LEARNER_PORT_STEP + i),
+                Configuration.NULL_PEERID);
         }
 
         this.cluster = new TestCluster(this.groupId, this.dataPath, peers, learners, 300);
