@@ -319,7 +319,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
                         follower = new PeerId();
                         follower.parse(followerPeer);
                     }
-                    addLearner(peer, follower);
+                    addLearner(peer, follower == null ? Configuration.NULL_PEERID : follower);
                 } else {
                     addPeer(peer);
                 }
