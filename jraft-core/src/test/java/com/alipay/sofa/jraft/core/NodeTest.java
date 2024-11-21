@@ -732,7 +732,7 @@ public class NodeTest {
         final List<PeerId> learners = new ArrayList<>();
         final Map<PeerId, PeerId> learnerWithSource = new ConcurrentHashMap<>();
         for (int i = 0; i < 3; i++) {
-            PeerId peerId =new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 3 + i);
+            PeerId peerId = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 3 + i);
             learners.add(peerId);
             learnerWithSource.put(peerId, Configuration.NULL_PEERID);
         }
