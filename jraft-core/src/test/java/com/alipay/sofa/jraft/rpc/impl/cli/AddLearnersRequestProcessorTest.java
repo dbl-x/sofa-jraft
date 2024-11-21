@@ -18,7 +18,6 @@ package com.alipay.sofa.jraft.rpc.impl.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.eq;
 
 import java.util.Arrays;
 
@@ -51,7 +50,7 @@ public class AddLearnersRequestProcessorTest extends AbstractCliRequestProcessor
     public void verify(final String interest, final Node node, final ArgumentCaptor<Closure> doneArg) {
         assertEquals(interest, AddLearnersRequest.class.getName());
         Mockito.verify(node).addLearners(
-            eq(Arrays.asList(new PeerId("learner", 8082), new PeerId("test", 8182), new PeerId("test", 8183))),
+            Arrays.asList(new PeerId("learner", 8082), new PeerId("test", 8182), new PeerId("test", 8183)),
             doneArg.capture());
         Closure done = doneArg.getValue();
         assertNotNull(done);

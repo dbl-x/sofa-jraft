@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.rpc.impl.cli;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 import com.alipay.sofa.jraft.entity.PeerId;
@@ -53,28 +54,27 @@ public class ResetLearnersRequestProcessor extends BaseCliRequestProcessor<Reset
     @Override
     protected Message processRequest0(final CliRequestContext ctx, final ResetLearnersRequest request,
                                       final RpcRequestClosure done) {
-        final List<PeerId> oldLearners = ctx.node.listLearners();
+        final Map<PeerId, PeerId> oldLearners = ctx.node.listLearners();
         final List<PeerId> newLearners = new ArrayList<>(request.getLearnersCount());
 
         for (final String peerStr : request.getLearnersList()) {
             final PeerId peer = new PeerId();
             if (!peer.parse(peerStr)) {
-                return RpcFactoryHelper
-                    .responseFactory()
-                    .newResponse(defaultResp(), RaftError.EINVAL, "Fail to parse peer id %s", peerStr);
+                return RpcFactoryHelper.responseFactory().newResponse(defaultResp(), RaftError.EINVAL,
+                    "Fail to parse peer id %s", peerStr);
             }
             newLearners.add(peer);
         }
 
-        LOG.info("Receive ResetLearnersRequest to {} from {}, resetting into {}.", ctx.node.getNodeId(),
-            done.getRpcCtx().getRemoteAddress(), newLearners);
+        LOG.info("Receive ResetLearnersRequest to {} from {}, resetting into {}.", ctx.node.getNodeId(), done
+            .getRpcCtx().getRemoteAddress(), newLearners);
         ctx.node.resetLearners(newLearners, status -> {
             if (!status.isOk()) {
                 done.run(status);
             } else {
                 final LearnersOpResponse.Builder rb = LearnersOpResponse.newBuilder();
 
-                for (final PeerId peer : oldLearners) {
+                for (final PeerId peer : oldLearners.keySet()) {
                     rb.addOldLearners(peer.toString());
                 }
 

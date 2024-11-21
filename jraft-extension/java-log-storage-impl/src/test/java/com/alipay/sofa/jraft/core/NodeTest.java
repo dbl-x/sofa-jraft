@@ -22,10 +22,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
@@ -642,6 +643,8 @@ public class NodeTest {
 
         final Endpoint learnerAddr = new Endpoint(TestUtils.getMyIp(), TestUtils.INIT_PORT + 1);
         final PeerId learnerPeer = new PeerId(learnerAddr, 0);
+        Map<PeerId, PeerId> learners = new ConcurrentHashMap<>();
+        learners.put(learnerPeer, Configuration.NULL_PEERID);
 
         NodeManager.getInstance().addAddress(addr);
         NodeManager.getInstance().addAddress(learnerAddr);
@@ -656,8 +659,7 @@ public class NodeTest {
             nodeOptions.setLogUri(this.dataPath + File.separator + "log1");
             nodeOptions.setRaftMetaUri(this.dataPath + File.separator + "meta1");
             nodeOptions.setSnapshotUri(this.dataPath + File.separator + "snapshot1");
-            nodeOptions.setInitialConf(new Configuration(Collections.singletonList(peer), Collections
-                .singletonList(learnerPeer)));
+            nodeOptions.setInitialConf(new Configuration(Collections.singletonList(peer), learners));
 
             final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(learnerAddr);
             learnerServer = new RaftGroupService("unittest", new PeerId(learnerAddr, 0), nodeOptions, rpcServer);
@@ -672,8 +674,7 @@ public class NodeTest {
             nodeOptions.setLogUri(this.dataPath + File.separator + "log");
             nodeOptions.setRaftMetaUri(this.dataPath + File.separator + "meta");
             nodeOptions.setSnapshotUri(this.dataPath + File.separator + "snapshot");
-            nodeOptions.setInitialConf(new Configuration(Collections.singletonList(peer), Collections
-                .singletonList(learnerPeer)));
+            nodeOptions.setInitialConf(new Configuration(Collections.singletonList(peer), learners));
             final Node node = new NodeImpl("unittest", peer);
             assertTrue(node.init(nodeOptions));
 
@@ -708,13 +709,15 @@ public class NodeTest {
     public void testResetLearners() throws Exception {
         final List<PeerId> peers = TestUtils.generatePeers(3);
 
-        final LinkedHashSet<PeerId> learners = new LinkedHashSet<>();
-
+        final List<PeerId> learners = new ArrayList<>();
+        final Map<PeerId, PeerId> learnerWithSource = new ConcurrentHashMap<>();
         for (int i = 0; i < 3; i++) {
-            learners.add(new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 3 + i));
+            PeerId peerId = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 3 + i);
+            learners.add(peerId);
+            learnerWithSource.put(peerId, Configuration.NULL_PEERID);
         }
 
-        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers, learners, 300);
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers, learnerWithSource, 300);
 
         for (final PeerId peer : peers) {
             assertTrue(cluster.start(peer.getEndpoint()));
@@ -744,7 +747,7 @@ public class NodeTest {
             assertEquals(2, learners.size());
 
             SynchronizedClosure done = new SynchronizedClosure();
-            leader.resetLearners(new ArrayList<>(learners), done);
+            leader.resetLearners(learners, done);
             assertTrue(done.await().isOk());
             assertEquals(2, leader.listAliveLearners().size());
             assertEquals(2, leader.listLearners().size());
@@ -763,7 +766,7 @@ public class NodeTest {
             // remove another learner
             PeerId learnerPeer = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 4);
             SynchronizedClosure done = new SynchronizedClosure();
-            leader.removeLearners(Arrays.asList(learnerPeer), done);
+            leader.removeLearners(Collections.singletonList(learnerPeer), done);
             assertTrue(done.await().isOk());
 
             this.sendTestTaskAndWait(leader);
@@ -787,9 +790,9 @@ public class NodeTest {
         final List<PeerId> peers = TestUtils.generatePeers(3);
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
-        LinkedHashSet<PeerId> learners = new LinkedHashSet<>();
+        Map<PeerId, PeerId> learners = new ConcurrentHashMap<>();
         PeerId learnerPeer = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 3);
-        learners.add(learnerPeer);
+        learners.put(learnerPeer, Configuration.NULL_PEERID);
         cluster.setLearners(learners);
 
         for (final PeerId peer : peers) {
@@ -802,7 +805,7 @@ public class NodeTest {
 
         assertEquals(3, leader.listPeers().size());
         assertEquals(leader.listLearners().size(), 1);
-        assertTrue(leader.listLearners().contains(learnerPeer));
+        assertTrue(leader.listLearners().containsKey(learnerPeer));
         assertTrue(leader.listAliveLearners().isEmpty());
 
         // start learner after cluster setup.

@@ -831,7 +831,7 @@ public class Replicator implements ThreadId.OnError {
             LOG.debug("Node {} send HeartbeatRequest to {} term {} lastCommittedIndex {}", this.options.getNode()
                 .getNodeId(), this.options.getPeerId(), this.options.getTerm(), rb.getCommittedIndex());
         } finally {
-                unlockId();
+            unlockId();
         }
     }
 
@@ -876,13 +876,17 @@ public class Replicator implements ThreadId.OnError {
             }
         }
         if (entry.getLearners() != null) {
-            for (final PeerId peer : entry.getLearners()) {
-                emb.addLearners(peer.toString());
+            for (final Map.Entry<PeerId, PeerId> learnerEntry : entry.getLearners().entrySet()) {
+                PeerId learner = learnerEntry.getKey();
+                PeerId source = learnerEntry.getValue();
+                emb.putLearnerWithSource(learner.toString(), source.toString());
             }
         }
         if (entry.getOldLearners() != null) {
-            for (final PeerId peer : entry.getOldLearners()) {
-                emb.addOldLearners(peer.toString());
+            for (final Map.Entry<PeerId, PeerId> learnerEntry : entry.getOldLearners().entrySet()) {
+                PeerId learner = learnerEntry.getKey();
+                PeerId source = learnerEntry.getValue();
+                emb.putOldLearnerWithSource(learner.toString(), source.toString());
             }
         }
     }

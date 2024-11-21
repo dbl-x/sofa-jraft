@@ -20,6 +20,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import com.alipay.sofa.jraft.rpc.CliRequests;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -303,16 +305,35 @@ public class CliServiceImpl implements CliService {
         if (result instanceof LearnersOpResponse) {
             final LearnersOpResponse resp = (LearnersOpResponse) result;
             final Configuration oldConf = new Configuration();
+            if (resp.getOldLearnerWithSourceCount() > 0) {
+                for (Map.Entry<String, String> entry : resp.getOldLearnerWithSourceMap().entrySet()) {
+                    final PeerId learner = new PeerId();
+                    learner.parse(entry.getKey());
+                    final PeerId source = new PeerId();
+                    source.parse(entry.getValue());
+                    oldConf.addLearner(learner, source);
+                }
+            }
             for (final String peerIdStr : resp.getOldLearnersList()) {
                 final PeerId oldPeer = new PeerId();
                 oldPeer.parse(peerIdStr);
-                oldConf.addLearner(oldPeer);
+                oldConf.addLearner(oldPeer, Configuration.NULL_PEERID);
             }
             final Configuration newConf = new Configuration();
-            for (final String peerIdStr : resp.getNewLearnersList()) {
-                final PeerId newPeer = new PeerId();
-                newPeer.parse(peerIdStr);
-                newConf.addLearner(newPeer);
+            if (resp.getNewLearnerWithSourceCount() > 0) {
+                for (Map.Entry<String, String> entry : resp.getNewLearnerWithSourceMap().entrySet()) {
+                    final PeerId learner = new PeerId();
+                    learner.parse(entry.getKey());
+                    final PeerId source = new PeerId();
+                    source.parse(entry.getValue());
+                    newConf.addLearner(learner, source);
+                }
+            } else {
+                for (final String peerIdStr : resp.getNewLearnersList()) {
+                    final PeerId newPeer = new PeerId();
+                    newPeer.parse(peerIdStr);
+                    newConf.addLearner(newPeer, Configuration.NULL_PEERID);
+                }
             }
 
             LOG.info("Learners of replication group {} changed from {} to {} after {}.", groupId, oldConf, newConf,
@@ -354,7 +375,7 @@ public class CliServiceImpl implements CliService {
 
     @Override
     public Status learner2Follower(final String groupId, final Configuration conf, final PeerId learner) {
-        Status status = removeLearners(groupId, conf, Arrays.asList(learner));
+        Status status = removeLearners(groupId, conf, Collections.singletonList(learner));
         if (status.isOk()) {
             status = addPeer(groupId, conf, new PeerId(learner.getIp(), learner.getPort()));
         }
@@ -510,7 +531,7 @@ public class CliServiceImpl implements CliService {
 
     @Override
     public List<PeerId> getAliveLearners(final String groupId, final Configuration conf) {
-        return getPeers(groupId, conf, true, true);
+        return getLiveLearners(groupId, conf);
     }
 
     @Override
@@ -592,6 +613,45 @@ public class CliServiceImpl implements CliService {
             return peerId;
         }
         return PeerId.emptyPeer();
+    }
+
+    private List<PeerId> getLiveLearners(final String groupId, final Configuration conf) {
+        List<PeerId> liveFollowers = getPeers(groupId, conf, false, true);
+        if (liveFollowers.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        final List<PeerId> learnersList = new ArrayList<>();
+        for (PeerId follower : liveFollowers) {
+            final GetPeersRequest.Builder rb = GetPeersRequest.newBuilder() //
+                .setGroupId(groupId) //
+                .setLeaderId(follower.toString()) // send request to follower
+                .setPeerType(CliRequests.PeerType.LEARNER) // only get learner peers
+                .setOnlyAlive(true); // get alive learner
+
+            try {
+                final Message result = this.cliClientService.getPeers(follower.getEndpoint(), rb.build(), null).get(
+                    this.cliOptions.getTimeoutMs() <= 0 ? this.cliOptions.getRpcDefaultTimeout()
+                        : this.cliOptions.getTimeoutMs(), TimeUnit.MILLISECONDS);
+                if (result instanceof GetPeersResponse) {
+                    final GetPeersResponse resp = (GetPeersResponse) result;
+                    final ProtocolStringList responsePeers = resp.getLearnersList();
+                    for (final String peerIdStr : responsePeers) {
+                        final PeerId newPeer = new PeerId();
+                        newPeer.parse(peerIdStr);
+                        learnersList.add(newPeer);
+                    }
+                } else {
+                    final ErrorResponse resp = (ErrorResponse) result;
+                    throw new JRaftException(resp.getErrorMsg());
+                }
+            } catch (final JRaftException e) {
+                throw e;
+            } catch (final Exception e) {
+                throw new JRaftException(e);
+            }
+        }
+        return learnersList;
     }
 
     private List<PeerId> getPeers(final String groupId, final Configuration conf, final boolean returnLearners,

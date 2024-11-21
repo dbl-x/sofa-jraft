@@ -18,9 +18,10 @@ package com.alipay.sofa.jraft.rpc.impl.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.eq;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -50,9 +51,11 @@ public class ResetLearnersRequestProcessorTest extends AbstractCliRequestProcess
     @Override
     public void verify(final String interest, final Node node, final ArgumentCaptor<Closure> doneArg) {
         assertEquals(interest, ResetLearnersRequest.class.getName());
-        Mockito.verify(node).resetLearners(
-            eq(Arrays.asList(new PeerId("learner", 8082), new PeerId("test", 8182), new PeerId("test", 8183))),
-            doneArg.capture());
+        List<PeerId> learners = new ArrayList<>();
+        learners.add(new PeerId("learner", 8082));
+        learners.add(new PeerId("test", 8182));
+        learners.add(new PeerId("test", 8183));
+        Mockito.verify(node).resetLearners(learners, doneArg.capture());
         Closure done = doneArg.getValue();
         assertNotNull(done);
         done.run(Status.OK());

@@ -70,15 +70,23 @@ message GetLeaderResponse {
     optional ErrorResponse errorResponse = 99;
 }
 
+enum PeerType {
+    ALL = 0;
+    FOLLOWER = 1;
+    LEARNER = 2;
+}
+
 message GetPeersRequest {
     required string group_id = 1;
     optional string leader_id = 2;
     optional bool only_alive = 3 [default = false];
+    optional PeerType peer_type = 4 [default = ALL];
 }
 
 message GetPeersResponse {
     repeated string peers = 1;
     repeated string learners = 2;
+    map<string, string> learner_with_source = 3;
     optional ErrorResponse errorResponse = 99;
 }
 
@@ -103,5 +111,7 @@ message ResetLearnersRequest {
 message LearnersOpResponse {
     repeated string old_learners = 1;
     repeated string new_learners = 2;
+    map<string, string> old_learner_with_source = 3;
+    map<string, string> new_learner_with_source = 4;
     optional ErrorResponse errorResponse = 99;
 }

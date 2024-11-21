@@ -20,13 +20,14 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -79,10 +80,11 @@ public class CliServiceTest {
         assertEquals(NodeImpl.GLOBAL_NUM_NODES.get(), 0);
         final List<PeerId> peers = TestUtils.generatePeers(3);
 
-        final LinkedHashSet<PeerId> learners = new LinkedHashSet<>();
+        final Map<PeerId, PeerId> learners = new ConcurrentHashMap<>();
         //2 learners
         for (int i = 0; i < 2; i++) {
-            learners.add(new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + LEARNER_PORT_STEP + i));
+            learners.put(new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + LEARNER_PORT_STEP + i),
+                Configuration.NULL_PEERID);
         }
 
         this.cluster = new TestCluster(this.groupId, this.dataPath, peers, learners, 300);
@@ -90,7 +92,7 @@ public class CliServiceTest {
             this.cluster.start(peer.getEndpoint());
         }
 
-        for (final PeerId peer : learners) {
+        for (final PeerId peer : learners.keySet()) {
             this.cluster.startLearner(peer);
         }
 
@@ -157,12 +159,19 @@ public class CliServiceTest {
             }
         }
         assertEquals(0, this.cluster.getFsmByPeer(learner3).getLogs().size());
-        List<PeerId> oldLearners = new ArrayList<PeerId>(this.conf.getLearners());
-        assertEquals(oldLearners, this.cliService.getLearners(this.groupId, this.conf));
-        assertEquals(oldLearners, this.cliService.getAliveLearners(this.groupId, this.conf));
+        List<PeerId> oldLearners = new ArrayList<>(this.conf.getLearners().keySet());
+        Collections.sort(oldLearners);
+
+        List<PeerId> gotLearners = this.cliService.getLearners(this.groupId, this.conf);
+        Collections.sort(gotLearners);
+        List<PeerId> gotLiveLearners = this.cliService.getAliveLearners(this.groupId, this.conf);
+        Collections.sort(gotLiveLearners);
+
+        assertEquals(oldLearners, gotLearners);
+        assertEquals(oldLearners, gotLiveLearners);
 
         // Add learner3
-        this.cliService.addLearners(this.groupId, this.conf, Arrays.asList(learner3));
+        this.cliService.addLearners(this.groupId, this.conf, Collections.singletonList(learner3));
         Thread.sleep(100);
         assertEquals(10, this.cluster.getFsmByPeer(learner3).getLogs().size());
 
@@ -174,11 +183,16 @@ public class CliServiceTest {
         }
         List<PeerId> newLearners = new ArrayList<>(oldLearners);
         newLearners.add(learner3);
-        assertEquals(newLearners, this.cliService.getLearners(this.groupId, this.conf));
-        assertEquals(newLearners, this.cliService.getAliveLearners(this.groupId, this.conf));
+        Collections.sort(newLearners);
+        gotLearners = this.cliService.getLearners(this.groupId, this.conf);
+        Collections.sort(gotLearners);
+        assertEquals(newLearners, gotLearners);
+        gotLiveLearners = this.cliService.getAliveLearners(this.groupId, this.conf);
+        Collections.sort(gotLiveLearners);
+        assertEquals(newLearners, gotLiveLearners);
 
         // Remove  3
-        this.cliService.removeLearners(this.groupId, this.conf, Arrays.asList(learner3));
+        this.cliService.removeLearners(this.groupId, this.conf, Collections.singletonList(learner3));
         sendTestTaskAndWait(this.cluster.getLeader(), 0);
         Thread.sleep(500);
         for (final MockStateMachine fsm : this.cluster.getFsms()) {
@@ -188,11 +202,15 @@ public class CliServiceTest {
         }
         // Latest 10 logs are not replicated to learner3, because it's removed.
         assertEquals(20, this.cluster.getFsmByPeer(learner3).getLogs().size());
-        assertEquals(oldLearners, this.cliService.getLearners(this.groupId, this.conf));
-        assertEquals(oldLearners, this.cliService.getAliveLearners(this.groupId, this.conf));
+        gotLearners = this.cliService.getLearners(this.groupId, this.conf);
+        Collections.sort(gotLearners);
+        assertEquals(oldLearners, gotLearners);
+        gotLiveLearners = this.cliService.getAliveLearners(this.groupId, this.conf);
+        Collections.sort(gotLiveLearners);
+        assertEquals(oldLearners, gotLiveLearners);
 
         // Set learners into [learner3]
-        this.cliService.resetLearners(this.groupId, this.conf, Arrays.asList(learner3));
+        this.cliService.resetLearners(this.groupId, this.conf, Collections.singletonList(learner3));
         Thread.sleep(100);
         assertEquals(30, this.cluster.getFsmByPeer(learner3).getLogs().size());
 
@@ -279,7 +297,7 @@ public class CliServiceTest {
         for (final PeerId peer : this.conf) {
             assertTrue(this.cliService.snapshot(this.groupId, peer).isOk());
         }
-        for (final PeerId peer : this.conf.getLearners()) {
+        for (final PeerId peer : this.conf.getLearners().keySet()) {
             assertTrue(this.cliService.snapshot(this.groupId, peer).isOk());
         }
         Thread.sleep(1000);

@@ -16,10 +16,13 @@
  */
 package com.alipay.sofa.jraft.rpc.impl.cli;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.rpc.CliRequests;
 import com.alipay.sofa.jraft.rpc.CliRequests.GetPeersRequest;
 import com.alipay.sofa.jraft.rpc.CliRequests.GetPeersResponse;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
@@ -49,21 +52,42 @@ public class GetPeersRequestProcessor extends BaseCliRequestProcessor<GetPeersRe
     @Override
     protected Message processRequest0(final CliRequestContext ctx, final GetPeersRequest request,
                                       final RpcRequestClosure done) {
-        final List<PeerId> peers;
-        final List<PeerId> learners;
-        if (request.hasOnlyAlive() && request.getOnlyAlive()) {
-            peers = ctx.node.listAlivePeers();
-            learners = ctx.node.listAliveLearners();
+        List<PeerId> peers = null;
+        List<PeerId> learners;
+        Map<PeerId, PeerId> learnerWithSource = null;
+        CliRequests.PeerType peerType = request.getPeerType();
+        if (peerType == CliRequests.PeerType.LEARNER) {
+            if (request.hasOnlyAlive() && request.getOnlyAlive()) {
+                learners = ctx.node.listAliveLearners();
+            } else {
+                learnerWithSource = ctx.node.listLearners();
+                learners = new ArrayList<>(learnerWithSource.keySet());
+            }
         } else {
-            peers = ctx.node.listPeers();
-            learners = ctx.node.listLearners();
+            if (request.hasOnlyAlive() && request.getOnlyAlive()) {
+                peers = ctx.node.listAlivePeers();
+                learners = ctx.node.listAliveLearners();
+            } else {
+                peers = ctx.node.listPeers();
+                learnerWithSource = ctx.node.listLearners();
+                learners = new ArrayList<>(learnerWithSource.keySet());
+            }
         }
         final GetPeersResponse.Builder builder = GetPeersResponse.newBuilder();
-        for (final PeerId peerId : peers) {
-            builder.addPeers(peerId.toString());
+        if (peers != null && !peers.isEmpty()) {
+            for (final PeerId peerId : peers) {
+                builder.addPeers(peerId.toString());
+            }
         }
-        for (final PeerId peerId : learners) {
-            builder.addLearners(peerId.toString());
+        if (learners != null && !learners.isEmpty()) {
+            for (final PeerId peerId : learners) {
+                builder.addLearners(peerId.toString());
+            }
+        }
+        if (learnerWithSource != null && !learnerWithSource.isEmpty()) {
+            for (Map.Entry<PeerId, PeerId> entry : learnerWithSource.entrySet()) {
+                builder.putLearnerWithSource(entry.getKey().toString(), entry.getValue().toString());
+            }
         }
         return builder.build();
     }

@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.rpc.impl.cli;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 import com.alipay.sofa.jraft.entity.PeerId;
@@ -53,8 +54,8 @@ public class RemoveLearnersRequestProcessor extends BaseCliRequestProcessor<Remo
     @Override
     protected Message processRequest0(final CliRequestContext ctx, final RemoveLearnersRequest request,
                                       final RpcRequestClosure done) {
-        final List<PeerId> oldLearners = ctx.node.listLearners();
-        final List<PeerId> removeingLearners = new ArrayList<>(request.getLearnersCount());
+        final Map<PeerId, PeerId> oldLearners = ctx.node.listLearners();
+        final List<PeerId> removingLearners = new ArrayList<>(request.getLearnersCount());
 
         for (final String peerStr : request.getLearnersList()) {
             final PeerId peer = new PeerId();
@@ -63,20 +64,20 @@ public class RemoveLearnersRequestProcessor extends BaseCliRequestProcessor<Remo
                     .responseFactory() //
                     .newResponse(defaultResp(), RaftError.EINVAL, "Fail to parse peer id %s", peerStr);
             }
-            removeingLearners.add(peer);
+            removingLearners.add(peer);
         }
 
         LOG.info("Receive RemoveLearnersRequest to {} from {}, removing {}.", ctx.node.getNodeId(),
-            done.getRpcCtx().getRemoteAddress(), removeingLearners);
-        ctx.node.removeLearners(removeingLearners, status -> {
+            done.getRpcCtx().getRemoteAddress(), removingLearners);
+        ctx.node.removeLearners(removingLearners, status -> {
             if (!status.isOk()) {
                 done.run(status);
             } else {
                 final LearnersOpResponse.Builder rb = LearnersOpResponse.newBuilder();
 
-                for (final PeerId peer : oldLearners) {
+                for (final PeerId peer : oldLearners.keySet()) {
                     rb.addOldLearners(peer.toString());
-                    if (!removeingLearners.contains(peer)) {
+                    if (!removingLearners.contains(peer)) {
                         rb.addNewLearners(peer.toString());
                     }
                 }
