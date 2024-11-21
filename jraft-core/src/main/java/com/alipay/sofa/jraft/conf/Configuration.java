@@ -89,7 +89,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
         addLearners(learners);
     }
 
-    public void setLearners(final ConcurrentHashMap<PeerId, PeerId> learners) {
+    public void setLearners(final Map<PeerId, PeerId> learners) {
         this.learners = learners;
     }
 

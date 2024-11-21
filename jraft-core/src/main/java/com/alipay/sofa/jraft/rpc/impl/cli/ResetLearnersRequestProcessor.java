@@ -68,24 +68,23 @@ public class ResetLearnersRequestProcessor extends BaseCliRequestProcessor<Reset
 
         LOG.info("Receive ResetLearnersRequest to {} from {}, resetting into {}.", ctx.node.getNodeId(), done
             .getRpcCtx().getRemoteAddress(), newLearners);
-        // TODO 丞一 这里收到请求之后应该根据信息计算出Learner对应的Source，然后再调用Node进行reset操作
-        //        ctx.node.resetLearners(newLearners, status -> {
-        //            if (!status.isOk()) {
-        //                done.run(status);
-        //            } else {
-        //                final LearnersOpResponse.Builder rb = LearnersOpResponse.newBuilder();
-        //
-        //                for (final PeerId peer : oldLearners.keySet()) {
-        //                    rb.addOldLearners(peer.toString());
-        //                }
-        //
-        //                for (final PeerId peer : newLearners) {
-        //                    rb.addNewLearners(peer.toString());
-        //                }
-        //
-        //                done.sendResponse(rb.build());
-        //            }
-        //        });
+        ctx.node.resetLearners(newLearners, status -> {
+            if (!status.isOk()) {
+                done.run(status);
+            } else {
+                final LearnersOpResponse.Builder rb = LearnersOpResponse.newBuilder();
+
+                for (final PeerId peer : oldLearners.keySet()) {
+                    rb.addOldLearners(peer.toString());
+                }
+
+                for (final PeerId peer : newLearners) {
+                    rb.addNewLearners(peer.toString());
+                }
+
+                done.sendResponse(rb.build());
+            }
+        });
 
         return null;
     }

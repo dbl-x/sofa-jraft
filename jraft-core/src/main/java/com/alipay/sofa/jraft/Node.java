@@ -261,7 +261,7 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      * @param done     callback
      * @since 1.4.0
      */
-    void resetLearners(final Map<PeerId, PeerId> learners, final Closure done);
+    void resetLearners(final List<PeerId> learners, final Closure done);
 
     /**
      * Start a snapshot immediately if possible. done.run() would be invoked when

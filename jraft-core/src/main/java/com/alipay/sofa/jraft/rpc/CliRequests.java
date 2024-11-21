@@ -30,6 +30,108 @@ public final class CliRequests {
         registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
     }
 
+    /**
+     * Protobuf enum {@code jraft.PeerType}
+     */
+    public enum PeerType implements com.google.protobuf.ProtocolMessageEnum {
+        /**
+         * <code>ALL = 0;</code>
+         */
+        ALL(0),
+        /**
+         * <code>FOLLOWER = 1;</code>
+         */
+        FOLLOWER(1),
+        /**
+         * <code>LEARNER = 2;</code>
+         */
+        LEARNER(2), ;
+
+        /**
+         * <code>ALL = 0;</code>
+         */
+        public static final int ALL_VALUE      = 0;
+        /**
+         * <code>FOLLOWER = 1;</code>
+         */
+        public static final int FOLLOWER_VALUE = 1;
+        /**
+         * <code>LEARNER = 2;</code>
+         */
+        public static final int LEARNER_VALUE  = 2;
+
+        public final int getNumber() {
+            return value;
+        }
+
+        /**
+         * @param value The numeric wire value of the corresponding enum entry.
+         * @return The enum associated with the given numeric wire value.
+         * @deprecated Use {@link #forNumber(int)} instead.
+         */
+        @java.lang.Deprecated
+        public static PeerType valueOf(int value) {
+            return forNumber(value);
+        }
+
+        /**
+         * @param value The numeric wire value of the corresponding enum entry.
+         * @return The enum associated with the given numeric wire value.
+         */
+        public static PeerType forNumber(int value) {
+            switch (value) {
+                case 0:
+                    return ALL;
+                case 1:
+                    return FOLLOWER;
+                case 2:
+                    return LEARNER;
+                default:
+                    return null;
+            }
+        }
+
+        public static com.google.protobuf.Internal.EnumLiteMap<PeerType> internalGetValueMap() {
+            return internalValueMap;
+        }
+
+        private static final com.google.protobuf.Internal.EnumLiteMap<PeerType> internalValueMap = new com.google.protobuf.Internal.EnumLiteMap<PeerType>() {
+                                                                                                     public PeerType findValueByNumber(int number) {
+                                                                                                         return PeerType
+                                                                                                             .forNumber(number);
+                                                                                                     }
+                                                                                                 };
+
+        public final com.google.protobuf.Descriptors.EnumValueDescriptor getValueDescriptor() {
+            return getDescriptor().getValues().get(ordinal());
+        }
+
+        public final com.google.protobuf.Descriptors.EnumDescriptor getDescriptorForType() {
+            return getDescriptor();
+        }
+
+        public static final com.google.protobuf.Descriptors.EnumDescriptor getDescriptor() {
+            return com.alipay.sofa.jraft.rpc.CliRequests.getDescriptor().getEnumTypes().get(0);
+        }
+
+        private static final PeerType[] VALUES = values();
+
+        public static PeerType valueOf(com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+            if (desc.getType() != getDescriptor()) {
+                throw new java.lang.IllegalArgumentException("EnumValueDescriptor is not for this type.");
+            }
+            return VALUES[desc.getIndex()];
+        }
+
+        private final int value;
+
+        private PeerType(int value) {
+            this.value = value;
+        }
+
+        // @@protoc_insertion_point(enum_scope:jraft.PeerType)
+    }
+
     public interface AddPeerRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:jraft.AddPeerRequest)
                                             com.google.protobuf.MessageOrBuilder {
@@ -11090,6 +11192,18 @@ public final class CliRequests {
          * @return The onlyAlive.
          */
         boolean getOnlyAlive();
+
+        /**
+         * <code>optional .jraft.PeerType peer_type = 4 [default = ALL];</code>
+         * @return Whether the peerType field is set.
+         */
+        boolean hasPeerType();
+
+        /**
+         * <code>optional .jraft.PeerType peer_type = 4 [default = ALL];</code>
+         * @return The peerType.
+         */
+        com.alipay.sofa.jraft.rpc.CliRequests.PeerType getPeerType();
     }
 
     /**
@@ -11108,6 +11222,7 @@ public final class CliRequests {
         private GetPeersRequest() {
             groupId_ = "";
             leaderId_ = "";
+            peerType_ = 0;
         }
 
         @java.lang.Override
@@ -11154,6 +11269,19 @@ public final class CliRequests {
                         case 24: {
                             bitField0_ |= 0x00000004;
                             onlyAlive_ = input.readBool();
+                            break;
+                        }
+                        case 32: {
+                            int rawValue = input.readEnum();
+                            @SuppressWarnings("deprecation")
+                            com.alipay.sofa.jraft.rpc.CliRequests.PeerType value = com.alipay.sofa.jraft.rpc.CliRequests.PeerType
+                                .valueOf(rawValue);
+                            if (value == null) {
+                                unknownFields.mergeVarintField(4, rawValue);
+                            } else {
+                                bitField0_ |= 0x00000008;
+                                peerType_ = rawValue;
+                            }
                             break;
                         }
                         default: {
@@ -11303,6 +11431,30 @@ public final class CliRequests {
             return onlyAlive_;
         }
 
+        public static final int PEER_TYPE_FIELD_NUMBER = 4;
+        private int             peerType_;
+
+        /**
+         * <code>optional .jraft.PeerType peer_type = 4 [default = ALL];</code>
+         * @return Whether the peerType field is set.
+         */
+        @java.lang.Override
+        public boolean hasPeerType() {
+            return ((bitField0_ & 0x00000008) != 0);
+        }
+
+        /**
+         * <code>optional .jraft.PeerType peer_type = 4 [default = ALL];</code>
+         * @return The peerType.
+         */
+        @java.lang.Override
+        public com.alipay.sofa.jraft.rpc.CliRequests.PeerType getPeerType() {
+            @SuppressWarnings("deprecation")
+            com.alipay.sofa.jraft.rpc.CliRequests.PeerType result = com.alipay.sofa.jraft.rpc.CliRequests.PeerType
+                .valueOf(peerType_);
+            return result == null ? com.alipay.sofa.jraft.rpc.CliRequests.PeerType.ALL : result;
+        }
+
         private byte memoizedIsInitialized = -1;
 
         @java.lang.Override
@@ -11332,6 +11484,9 @@ public final class CliRequests {
             if (((bitField0_ & 0x00000004) != 0)) {
                 output.writeBool(3, onlyAlive_);
             }
+            if (((bitField0_ & 0x00000008) != 0)) {
+                output.writeEnum(4, peerType_);
+            }
             unknownFields.writeTo(output);
         }
 
@@ -11350,6 +11505,9 @@ public final class CliRequests {
             }
             if (((bitField0_ & 0x00000004) != 0)) {
                 size += com.google.protobuf.CodedOutputStream.computeBoolSize(3, onlyAlive_);
+            }
+            if (((bitField0_ & 0x00000008) != 0)) {
+                size += com.google.protobuf.CodedOutputStream.computeEnumSize(4, peerType_);
             }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
@@ -11384,6 +11542,12 @@ public final class CliRequests {
                 if (getOnlyAlive() != other.getOnlyAlive())
                     return false;
             }
+            if (hasPeerType() != other.hasPeerType())
+                return false;
+            if (hasPeerType()) {
+                if (peerType_ != other.peerType_)
+                    return false;
+            }
             if (!unknownFields.equals(other.unknownFields))
                 return false;
             return true;
@@ -11407,6 +11571,10 @@ public final class CliRequests {
             if (hasOnlyAlive()) {
                 hash = (37 * hash) + ONLY_ALIVE_FIELD_NUMBER;
                 hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getOnlyAlive());
+            }
+            if (hasPeerType()) {
+                hash = (37 * hash) + PEER_TYPE_FIELD_NUMBER;
+                hash = (53 * hash) + peerType_;
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -11546,6 +11714,8 @@ public final class CliRequests {
                 bitField0_ = (bitField0_ & ~0x00000002);
                 onlyAlive_ = false;
                 bitField0_ = (bitField0_ & ~0x00000004);
+                peerType_ = 0;
+                bitField0_ = (bitField0_ & ~0x00000008);
                 return this;
             }
 
@@ -11586,6 +11756,10 @@ public final class CliRequests {
                     result.onlyAlive_ = onlyAlive_;
                     to_bitField0_ |= 0x00000004;
                 }
+                if (((from_bitField0_ & 0x00000008) != 0)) {
+                    to_bitField0_ |= 0x00000008;
+                }
+                result.peerType_ = peerType_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -11648,6 +11822,9 @@ public final class CliRequests {
                 }
                 if (other.hasOnlyAlive()) {
                     setOnlyAlive(other.getOnlyAlive());
+                }
+                if (other.hasPeerType()) {
+                    setPeerType(other.getPeerType());
                 }
                 this.mergeUnknownFields(other.unknownFields);
                 onChanged();
@@ -11891,6 +12068,55 @@ public final class CliRequests {
             public Builder clearOnlyAlive() {
                 bitField0_ = (bitField0_ & ~0x00000004);
                 onlyAlive_ = false;
+                onChanged();
+                return this;
+            }
+
+            private int peerType_ = 0;
+
+            /**
+             * <code>optional .jraft.PeerType peer_type = 4 [default = ALL];</code>
+             * @return Whether the peerType field is set.
+             */
+            @java.lang.Override
+            public boolean hasPeerType() {
+                return ((bitField0_ & 0x00000008) != 0);
+            }
+
+            /**
+             * <code>optional .jraft.PeerType peer_type = 4 [default = ALL];</code>
+             * @return The peerType.
+             */
+            @java.lang.Override
+            public com.alipay.sofa.jraft.rpc.CliRequests.PeerType getPeerType() {
+                @SuppressWarnings("deprecation")
+                com.alipay.sofa.jraft.rpc.CliRequests.PeerType result = com.alipay.sofa.jraft.rpc.CliRequests.PeerType
+                    .valueOf(peerType_);
+                return result == null ? com.alipay.sofa.jraft.rpc.CliRequests.PeerType.ALL : result;
+            }
+
+            /**
+             * <code>optional .jraft.PeerType peer_type = 4 [default = ALL];</code>
+             * @param value The peerType to set.
+             * @return This builder for chaining.
+             */
+            public Builder setPeerType(com.alipay.sofa.jraft.rpc.CliRequests.PeerType value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                bitField0_ |= 0x00000008;
+                peerType_ = value.getNumber();
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional .jraft.PeerType peer_type = 4 [default = ALL];</code>
+             * @return This builder for chaining.
+             */
+            public Builder clearPeerType() {
+                bitField0_ = (bitField0_ & ~0x00000008);
+                peerType_ = 0;
                 onChanged();
                 return this;
             }
@@ -18209,32 +18435,34 @@ public final class CliRequests {
                                               + "LeaderRequest\022\020\n\010group_id\030\001 \002(\t\022\017\n\007peer_"
                                               + "id\030\002 \001(\t\"S\n\021GetLeaderResponse\022\021\n\tleader_"
                                               + "id\030\001 \002(\t\022+\n\rerrorResponse\030c \001(\0132\024.jraft."
-                                              + "ErrorResponse\"Q\n\017GetPeersRequest\022\020\n\010grou"
+                                              + "ErrorResponse\"z\n\017GetPeersRequest\022\020\n\010grou"
                                               + "p_id\030\001 \002(\t\022\021\n\tleader_id\030\002 \001(\t\022\031\n\nonly_al"
-                                              + "ive\030\003 \001(\010:\005false\"\347\001\n\020GetPeersResponse\022\r\n"
-                                              + "\005peers\030\001 \003(\t\022\020\n\010learners\030\002 \003(\t\022K\n\023learne"
-                                              + "r_with_source\030\003 \003(\0132..jraft.GetPeersResp"
-                                              + "onse.LearnerWithSourceEntry\022+\n\rerrorResp"
-                                              + "onse\030c \001(\0132\024.jraft.ErrorResponse\0328\n\026Lear"
-                                              + "nerWithSourceEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value"
-                                              + "\030\002 \001(\t:\0028\001\"K\n\022AddLearnersRequest\022\020\n\010grou"
+                                              + "ive\030\003 \001(\010:\005false\022\'\n\tpeer_type\030\004 \001(\0162\017.jr"
+                                              + "aft.PeerType:\003ALL\"\347\001\n\020GetPeersResponse\022\r"
+                                              + "\n\005peers\030\001 \003(\t\022\020\n\010learners\030\002 \003(\t\022K\n\023learn"
+                                              + "er_with_source\030\003 \003(\0132..jraft.GetPeersRes"
+                                              + "ponse.LearnerWithSourceEntry\022+\n\rerrorRes"
+                                              + "ponse\030c \001(\0132\024.jraft.ErrorResponse\0328\n\026Lea"
+                                              + "rnerWithSourceEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005valu"
+                                              + "e\030\002 \001(\t:\0028\001\"K\n\022AddLearnersRequest\022\020\n\010gro"
+                                              + "up_id\030\001 \002(\t\022\021\n\tleader_id\030\002 \002(\t\022\020\n\010learne"
+                                              + "rs\030\003 \003(\t\"N\n\025RemoveLearnersRequest\022\020\n\010gro"
+                                              + "up_id\030\001 \002(\t\022\021\n\tleader_id\030\002 \002(\t\022\020\n\010learne"
+                                              + "rs\030\003 \003(\t\"M\n\024ResetLearnersRequest\022\020\n\010grou"
                                               + "p_id\030\001 \002(\t\022\021\n\tleader_id\030\002 \002(\t\022\020\n\010learner"
-                                              + "s\030\003 \003(\t\"N\n\025RemoveLearnersRequest\022\020\n\010grou"
-                                              + "p_id\030\001 \002(\t\022\021\n\tleader_id\030\002 \002(\t\022\020\n\010learner"
-                                              + "s\030\003 \003(\t\"M\n\024ResetLearnersRequest\022\020\n\010group"
-                                              + "_id\030\001 \002(\t\022\021\n\tleader_id\030\002 \002(\t\022\020\n\010learners"
-                                              + "\030\003 \003(\t\"\223\003\n\022LearnersOpResponse\022\024\n\014old_lea"
-                                              + "rners\030\001 \003(\t\022\024\n\014new_learners\030\002 \003(\t\022T\n\027old"
-                                              + "_learner_with_source\030\003 \003(\01323.jraft.Learn"
-                                              + "ersOpResponse.OldLearnerWithSourceEntry\022"
-                                              + "T\n\027new_learner_with_source\030\004 \003(\01323.jraft"
-                                              + ".LearnersOpResponse.NewLearnerWithSource"
-                                              + "Entry\022+\n\rerrorResponse\030c \001(\0132\024.jraft.Err"
-                                              + "orResponse\032;\n\031OldLearnerWithSourceEntry\022"
-                                              + "\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\032;\n\031NewLe"
-                                              + "arnerWithSourceEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005val"
-                                              + "ue\030\002 \001(\t:\0028\001B(\n\031com.alipay.sofa.jraft.rp"
-                                              + "cB\013CliRequests" };
+                                              + "s\030\003 \003(\t\"\223\003\n\022LearnersOpResponse\022\024\n\014old_le"
+                                              + "arners\030\001 \003(\t\022\024\n\014new_learners\030\002 \003(\t\022T\n\027ol"
+                                              + "d_learner_with_source\030\003 \003(\01323.jraft.Lear"
+                                              + "nersOpResponse.OldLearnerWithSourceEntry"
+                                              + "\022T\n\027new_learner_with_source\030\004 \003(\01323.jraf"
+                                              + "t.LearnersOpResponse.NewLearnerWithSourc"
+                                              + "eEntry\022+\n\rerrorResponse\030c \001(\0132\024.jraft.Er"
+                                              + "rorResponse\032;\n\031OldLearnerWithSourceEntry"
+                                              + "\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\032;\n\031NewL"
+                                              + "earnerWithSourceEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005va"
+                                              + "lue\030\002 \001(\t:\0028\001*.\n\010PeerType\022\007\n\003ALL\020\000\022\014\n\010FO"
+                                              + "LLOWER\020\001\022\013\n\007LEARNER\020\002B(\n\031com.alipay.sofa"
+                                              + ".jraft.rpcB\013CliRequests" };
         descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
             new com.google.protobuf.Descriptors.FileDescriptor[] { com.alipay.sofa.jraft.rpc.RpcRequests
                 .getDescriptor(), });
@@ -18282,7 +18510,7 @@ public final class CliRequests {
         internal_static_jraft_GetPeersRequest_descriptor = getDescriptor().getMessageTypes().get(11);
         internal_static_jraft_GetPeersRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_GetPeersRequest_descriptor, new java.lang.String[] { "GroupId", "LeaderId",
-            "OnlyAlive", });
+            "OnlyAlive", "PeerType", });
         internal_static_jraft_GetPeersResponse_descriptor = getDescriptor().getMessageTypes().get(12);
         internal_static_jraft_GetPeersResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_GetPeersResponse_descriptor, new java.lang.String[] { "Peers", "Learners",

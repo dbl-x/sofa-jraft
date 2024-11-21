@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import com.alipay.sofa.jraft.rpc.CliRequests;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -625,6 +626,7 @@ public class CliServiceImpl implements CliService {
             final GetPeersRequest.Builder rb = GetPeersRequest.newBuilder() //
                 .setGroupId(groupId) //
                 .setLeaderId(follower.toString()) // send request to follower
+                .setPeerType(CliRequests.PeerType.LEARNER) // only get learner peers
                 .setOnlyAlive(true); // get alive learner
 
             try {

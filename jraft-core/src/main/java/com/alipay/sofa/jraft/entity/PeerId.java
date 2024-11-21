@@ -36,7 +36,7 @@ import com.alipay.sofa.jraft.util.Utils;
  *
  * 2018-Mar-12 3:27:37 PM
  */
-public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
+public class PeerId implements Copiable<PeerId>, Serializable, Checksum, Comparable<PeerId> {
 
     private static final long   serialVersionUID = 8083529734784884641L;
 
@@ -327,5 +327,13 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
             return false;
         }
         return this.idx == other.idx;
+    }
+
+    @Override
+    public int compareTo(PeerId o) {
+        if (o == null) {
+            return -1;
+        }
+        return toString().compareTo(o.toString());
     }
 }

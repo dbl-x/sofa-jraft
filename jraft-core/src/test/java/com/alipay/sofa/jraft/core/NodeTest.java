@@ -729,18 +729,20 @@ public class NodeTest {
     public void testResetLearners() throws Exception {
         final List<PeerId> peers = TestUtils.generatePeers(3);
 
-        final Map<PeerId, PeerId> learners = new ConcurrentHashMap<>();
-
+        final List<PeerId> learners = new ArrayList<>();
+        final Map<PeerId, PeerId> learnerWithSource = new ConcurrentHashMap<>();
         for (int i = 0; i < 3; i++) {
-            learners.put(new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 3 + i), Configuration.NULL_PEERID);
+            PeerId peerId =new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 3 + i);
+            learners.add(peerId);
+            learnerWithSource.put(peerId, Configuration.NULL_PEERID);
         }
 
-        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers, learners, 300);
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers, learnerWithSource, 300);
 
         for (final PeerId peer : peers) {
             assertTrue(cluster.start(peer.getEndpoint()));
         }
-        for (final PeerId peer : learners.keySet()) {
+        for (final PeerId peer : learners) {
             assertTrue(cluster.startLearner(peer));
         }
 
@@ -765,7 +767,7 @@ public class NodeTest {
             assertEquals(2, learners.size());
 
             SynchronizedClosure done = new SynchronizedClosure();
-            leader.resetLearners(new ConcurrentHashMap<>(learners), done);
+            leader.resetLearners(learners, done);
             assertTrue(done.await().isOk());
             assertEquals(2, leader.listAliveLearners().size());
             assertEquals(2, leader.listLearners().size());

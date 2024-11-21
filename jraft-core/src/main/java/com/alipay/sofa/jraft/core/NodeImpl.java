@@ -3092,9 +3092,6 @@ public class NodeImpl implements Node, RaftServerService {
     public Map<PeerId, PeerId> listLearners() {
         this.readLock.lock();
         try {
-            if (this.state != State.STATE_LEADER) {
-                throw new IllegalStateException("Not leader");
-            }
             return this.conf.getConf().copyLearners();
         } finally {
             this.readLock.unlock();
@@ -3105,9 +3102,6 @@ public class NodeImpl implements Node, RaftServerService {
     public List<PeerId> listAliveLearners() {
         this.readLock.lock();
         try {
-            if (this.state != State.STATE_LEADER) {
-                throw new IllegalStateException("Not leader");
-            }
             return getAliveNodes(this.conf.getConf().getLearners().keySet(), Utils.monotonicMs());
         } finally {
             this.readLock.unlock();
@@ -3283,12 +3277,20 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     @Override
-    public void resetLearners(final Map<PeerId, PeerId> learners, final Closure done) {
+    public void resetLearners(final List<PeerId> learners, final Closure done) {
         checkPeers(learners);
         this.writeLock.lock();
         try {
             final Configuration newConf = new Configuration(this.conf.getConf());
-            newConf.setLearners(new ConcurrentHashMap<>(learners));
+            Map<PeerId, PeerId> learnersWithSource = new ConcurrentHashMap<>();
+            for (PeerId learner : learners) {
+                PeerId sourcePeer = getTargetSourcePeer(learner.getReplicationGroup());
+                if (sourcePeer == null) {
+                    throw new JRaftException("can not get target source peer for new learner: " + learner);
+                }
+                learnersWithSource.put(learner, sourcePeer);
+            }
+            newConf.setLearners(learnersWithSource);
             unsafeRegisterConfChange(this.conf.getConf(), newConf, done);
         } finally {
             this.writeLock.unlock();

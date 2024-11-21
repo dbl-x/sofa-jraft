@@ -70,10 +70,17 @@ message GetLeaderResponse {
     optional ErrorResponse errorResponse = 99;
 }
 
+enum PeerType {
+    ALL = 0;
+    FOLLOWER = 1;
+    LEARNER = 2;
+}
+
 message GetPeersRequest {
     required string group_id = 1;
     optional string leader_id = 2;
     optional bool only_alive = 3 [default = false];
+    optional PeerType peer_type = 4 [default = ALL];
 }
 
 message GetPeersResponse {
